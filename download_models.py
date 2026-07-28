@@ -2,9 +2,9 @@ import os
 import shutil
 from huggingface_hub import hf_hub_download
 
-REPO_ID = "noussairchalbi/roadguard-models"  # <-- a modifier si besoin
+REPO_ID = "NoussairChalbi/RoadGuard"  # <-- a modifier si besoin
 DEST_DIR = os.path.join(os.path.dirname(__file__), "detector", "ml_models")
-
+ 
 FILES = ["best_model.pth", "best_model_vgg16.pth"]
 
 os.makedirs(DEST_DIR, exist_ok=True)
