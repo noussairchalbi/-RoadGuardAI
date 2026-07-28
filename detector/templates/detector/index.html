@@ -1,0 +1,106 @@
+{% extends "detector/base.html" %}
+{% block title %}RoadGuard AI — Analyser{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Analyse intelligente de la route</h1>
+    <p class="subtitle">
+        Déposez une image ou une vidéo : nos deux modèles évaluent la
+        <strong>sécurité du transport</strong> (sûr / dangereux) et
+        <strong>l'état de la route</strong> (route propre / endommagée / obstacle),
+        avec une visualisation Grad-CAM des zones qui ont influencé la décision.
+    </p>
+</section>
+
+<section class="upload-card">
+    {% if form.errors %}
+        <div class="alert alert-error">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'analyze' %}" id="upload-form">
+        {% csrf_token %}
+        <label for="id_media_file" class="dropzone" id="dropzone">
+            <input type="file" name="media_file" id="id_media_file" accept="image/*,video/*" required>
+            <div class="dropzone-content">
+                <span class="dropzone-icon">📤</span>
+                <p><strong>Cliquez</strong> ou glissez-déposez une image / vidéo</p>
+                <p class="hint">JPG, PNG, WEBP, MP4, AVI, MOV, MKV, WEBM</p>
+                <p class="filename" id="filename"></p>
+            </div>
+        </label>
+
+        <button type="submit" class="btn-primary" id="submit-btn">
+            Analyser
+        </button>
+    </form>
+
+    <div class="loading" id="loading" style="display:none;">
+        <div class="spinner"></div>
+        <p>Analyse en cours (ResNet50 + VGG16 + Grad-CAM)… cela peut prendre un moment pour les vidéos.</p>
+    </div>
+</section>
+
+<section class="info-grid">
+    <div class="info-card">
+        <h3>🛡️ Sécurité du transport</h3>
+        <p>Modèle ResNet50 — classe l'image en <em>safe</em> ou <em>unsafe</em>.</p>
+    </div>
+    <div class="info-card">
+        <h3>🕳️ État de la route</h3>
+        <p>Modèle VGG16 — détecte <em>route propre</em>, <em>route endommagée</em> ou <em>obstacle</em>.</p>
+    </div>
+    <div class="info-card">
+        <h3>🔥 Grad-CAM</h3>
+        <p>Carte de chaleur montrant les zones de l'image qui ont motivé la décision de chaque modèle.</p>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const input = document.getElementById('id_media_file');
+    const filenameEl = document.getElementById('filename');
+    const dropzone = document.getElementById('dropzone');
+    const form = document.getElementById('upload-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loading = document.getElementById('loading');
+
+    input.addEventListener('change', () => {
+        if (input.files.length > 0) {
+            filenameEl.textContent = '✓ ' + input.files[0].name;
+        }
+    });
+
+    ['dragover', 'dragenter'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropzone.addEventListener(evt, (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+        });
+    });
+    dropzone.addEventListener('drop', (e) => {
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            input.files = files;
+            filenameEl.textContent = '✓ ' + files[0].name;
+        }
+    });
+
+    form.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Analyse en cours…';
+        loading.style.display = 'flex';
+    });
+</script>
+{% endblock %}

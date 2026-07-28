@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RoadGuard AI{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="{% url 'index' %}" class="brand">
+                <span class="brand-icon">🚦</span>
+                <span>RoadGuard <strong>AI</strong></span>
+            </a>
+            <nav>
+                <a href="{% url 'index' %}">Analyser</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>RoadGuard AI &mdash; Détection de sécurité de transport &amp; d'état de la route (ResNet50 + VGG16, Grad-CAM)</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

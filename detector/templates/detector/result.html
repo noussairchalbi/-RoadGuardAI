@@ -1,0 +1,129 @@
+{% extends "detector/base.html" %}
+{% load detector_extras %}
+{% block title %}RoadGuard AI — Résultats{% endblock %}
+
+{% block content %}
+<a href="{% url 'index' %}" class="back-link">&larr; Nouvelle analyse</a>
+
+{% if not is_video %}
+    {# ============ RESULTAT IMAGE ============ #}
+    <h1 class="page-title">Résultat de l'analyse</h1>
+
+    <div class="verdict-banner {% if safety.label == 'unsafe' %}danger{% else %}safe{% endif %}">
+        {% if safety.label == 'unsafe' %}⚠️{% else %}✅{% endif %}
+        <span>
+            <strong>{{ safety.label_fr }}</strong> —
+            {% if road.label == 'clean_road' %}
+                route en bon état
+            {% else %}
+                {{ road.label_fr|lower }}
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="results-grid">
+        <div class="result-card">
+            <h3>Image originale</h3>
+            <img src="{{ orig_url }}" alt="Image originale" class="result-img">
+        </div>
+
+        <div class="result-card">
+            <h3>🛡️ Sécurité — Grad-CAM</h3>
+            <img src="{{ gradcam_safety_url }}" alt="Grad-CAM sécurité" class="result-img">
+            <div class="pred-box {% if safety.label == 'unsafe' %}danger{% else %}safe{% endif %}">
+                <p class="pred-label">{{ safety.label_fr }}</p>
+                <p class="pred-conf">Confiance : {{ safety.confidence|pct }}%</p>
+            </div>
+            <div class="probs">
+                {% for cls, p in safety.probs.items %}
+                    <div class="prob-row">
+                        <span>{{ cls }}</span>
+                        <div class="prob-bar-bg">
+                            <div class="prob-bar" style="width: {% widthratio p 1 100 %}%;"></div>
+                        </div>
+                        <span>{% widthratio p 1 100 %}%</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="result-card">
+            <h3>🕳️ État de la route — Grad-CAM</h3>
+            <img src="{{ gradcam_road_url }}" alt="Grad-CAM route" class="result-img">
+            <div class="pred-box {% if road.label == 'clean_road' %}safe{% else %}danger{% endif %}">
+                <p class="pred-label">{{ road.label_fr }}</p>
+                <p class="pred-conf">Confiance : {{ road.confidence|pct }}%</p>
+            </div>
+            <div class="probs">
+                {% for cls, p in road.probs.items %}
+                    <div class="prob-row">
+                        <span>{{ cls }}</span>
+                        <div class="prob-bar-bg">
+                            <div class="prob-bar" style="width: {% widthratio p 1 100 %}%;"></div>
+                        </div>
+                        <span>{% widthratio p 1 100 %}%</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    {# ============ RESULTAT VIDEO ============ #}
+    <h1 class="page-title">Résultat de l'analyse vidéo</h1>
+
+    <div class="verdict-banner {% if summary.nb_alerts > 0 %}danger{% else %}safe{% endif %}">
+        {% if summary.nb_alerts > 0 %}⚠️{% else %}✅{% endif %}
+        <span>
+            {{ summary.nb_alerts }} alerte(s) détectée(s) sur {{ summary.sampled_frames }} frames analysées
+            ({{ summary.duration_s }}s de vidéo)
+        </span>
+    </div>
+
+    <div class="results-grid two-col">
+        <div class="result-card">
+            <h3>🎬 Vidéo annotée</h3>
+            <video controls class="result-video" src="{{ video_url }}"></video>
+        </div>
+
+        <div class="result-card">
+            <h3>📊 Résumé statistique</h3>
+
+            <h4>Sécurité du transport</h4>
+            <div class="probs">
+                {% for cls, pct in summary.safety_pct.items %}
+                    <div class="prob-row">
+                        <span>{{ safety_labels_fr|get_item:cls|default:cls }}</span>
+                        <div class="prob-bar-bg">
+                            <div class="prob-bar" style="width: {{ pct }}%;"></div>
+                        </div>
+                        <span>{{ pct }}% ({{ summary.safety_counts|get_item:cls }})</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h4>État de la route</h4>
+            <div class="probs">
+                {% for cls, pct in summary.road_pct.items %}
+                    <div class="prob-row">
+                        <span>{{ road_labels_fr|get_item:cls|default:cls }}</span>
+                        <div class="prob-bar-bg">
+                            <div class="prob-bar" style="width: {{ pct }}%;"></div>
+                        </div>
+                        <span>{{ pct }}% ({{ summary.road_counts|get_item:cls }})</span>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {% if summary.alerts %}
+            <h4>⏱️ Moments à risque</h4>
+            <ul class="alert-list">
+                {% for a in summary.alerts %}
+                    <li>t={{ a.time_s }}s — {{ safety_labels_fr|get_item:a.safety }}, {{ road_labels_fr|get_item:a.road }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
