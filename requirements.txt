@@ -1,6 +1,9 @@
 Django>=6.0,<7.0
+gunicorn>=21.2
+whitenoise>=6.6
 torch>=2.2
 torchvision>=0.17
 opencv-python-headless>=4.9
 Pillow>=10.0
 numpy>=1.26
+huggingface_hub>=0.20
