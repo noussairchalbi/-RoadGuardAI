@@ -29,6 +29,13 @@ CSRF_TRUSTED_ORIGINS = []
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
 
+# Render termine le HTTPS au niveau de son proxy et transmet la requete en
+# HTTP en interne avec un header X-Forwarded-Proto. Sans ce reglage, Django
+# croit que la requete est en HTTP, ce qui casse la verification CSRF sur
+# les formulaires POST (le GET fonctionne, mais pas le POST).
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
 
 # Application definition
 
