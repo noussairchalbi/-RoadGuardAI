@@ -1,6 +1,8 @@
 Django>=6.0,<7.0
 gunicorn>=21.2
 whitenoise>=6.6
+# PyTorch CPU-only (evite ~2 Go de dependances CUDA/GPU inutiles sur Render)
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.2
 torchvision>=0.17
 opencv-python-headless>=4.9
